@@ -1,0 +1,108 @@
+
+Question 17: Create a final district-level summary report 
+WITH scored_samples AS (
+    -- Step 1: Join all tables and calculate carbon score for each sample
+    SELECT 
+        s.sample_id,
+        s.district,
+        s.community,
+        s.land_use,
+        s.soc_percent,
+        s.clay_percent,
+        s.ph,
+        c.annual_rainfall_mm,
+        c.mean_temperature_c,
+        m.tillage_type,
+        m.irrigation_status,
+        m.residue_retention,
+        (CASE WHEN s.soc_percent < 1.0 THEN 3 ELSE 0 END +
+         CASE WHEN s.clay_percent > 25 THEN 2 ELSE 0 END +
+         CASE WHEN s.ph BETWEEN 6.0 AND 7.5 THEN 1 ELSE 0 END +
+         CASE WHEN m.tillage_type IN ('No-till', 'Reduced') THEN 2 ELSE 0 END +
+         CASE WHEN m.residue_retention IN ('Fully retained', 'Some retained') THEN 2 ELSE 0 END +
+         CASE WHEN s.land_use IN ('Cropland', 'Pasture') THEN 1 ELSE 0 END
+        ) AS carbon_score
+    FROM soil_samples s
+    LEFT JOIN climate_normals c ON s.district = c.district
+    LEFT JOIN management_practices m ON s.sample_id = m.sample_id
+),
+
+district_stats AS (
+    -- Step 2: Calculate all summary statistics per district
+    SELECT 
+        district,
+        COUNT(*) AS number_of_samples,
+        AVG(soc_percent) AS avg_soc,
+        AVG(ph) AS avg_ph,
+        AVG(clay_percent) AS avg_clay,
+        AVG(annual_rainfall_mm) AS avg_rainfall,
+        AVG(mean_temperature_c) AS avg_temperature,
+        ROUND(COUNT(CASE WHEN soc_percent < 1.0 THEN 1 END) * 100.0 / COUNT(*), 2) AS low_soc_percentage,
+        ROUND(COUNT(CASE WHEN soc_percent > 2.0 THEN 1 END) * 100.0 / COUNT(*), 2) AS high_soc_percentage,
+        COUNT(CASE WHEN carbon_score >= 8 THEN 1 END) AS high_opportunity_count,
+        COUNT(CASE WHEN carbon_score BETWEEN 5 AND 7 THEN 1 END) AS moderate_opportunity_count,
+        COUNT(CASE WHEN carbon_score < 5 THEN 1 END) AS low_opportunity_count,
+        AVG(carbon_score) AS overall_opportunity_score
+    FROM scored_samples
+    GROUP BY district
+),
+
+land_use_ranked AS (
+    -- Step 3a: Find the most common land use per district
+    SELECT 
+        district,
+        land_use,
+        COUNT(*) AS cnt,
+        ROW_NUMBER() OVER (PARTITION BY district ORDER BY COUNT(*) DESC) AS rn
+    FROM scored_samples
+    WHERE land_use IS NOT NULL
+    GROUP BY district, land_use
+),
+
+tillage_ranked AS (
+    -- Step 3b: Find the most common tillage type per district
+    SELECT 
+        district,
+        tillage_type,
+        COUNT(*) AS cnt,
+        ROW_NUMBER() OVER (PARTITION BY district ORDER BY COUNT(*) DESC) AS rn
+    FROM scored_samples
+    WHERE tillage_type IS NOT NULL
+    GROUP BY district, tillage_type
+),
+
+irrigation_ranked AS (
+    -- Step 3c: Find the most common irrigation status per district
+    SELECT 
+        district,
+        irrigation_status,
+        COUNT(*) AS cnt,
+        ROW_NUMBER() OVER (PARTITION BY district ORDER BY COUNT(*) DESC) AS rn
+    FROM scored_samples
+    WHERE irrigation_status IS NOT NULL
+    GROUP BY district, irrigation_status
+)
+
+-- Step 4: Final report
+SELECT 
+    ds.district,
+    ds.number_of_samples,
+    ROUND(ds.avg_soc, 2) AS avg_soc,
+    ROUND(ds.avg_ph, 2) AS avg_ph,
+    ROUND(ds.avg_clay, 2) AS avg_clay,
+    ROUND(ds.avg_rainfall, 2) AS avg_rainfall,
+    ROUND(ds.avg_temperature, 2) AS avg_temperature,
+    ds.low_soc_percentage,
+    ds.high_soc_percentage,
+    COALESCE(lu.land_use, 'N/A') AS dominant_land_use,
+    COALESCE(t.tillage_type, 'N/A') AS dominant_tillage,
+    COALESCE(i.irrigation_status, 'N/A') AS dominant_irrigation,
+    ds.high_opportunity_count,
+    ds.moderate_opportunity_count,
+    ds.low_opportunity_count,
+    ROUND(ds.overall_opportunity_score, 2) AS overall_opportunity_score
+FROM district_stats ds
+LEFT JOIN land_use_ranked lu ON ds.district = lu.district AND lu.rn = 1
+LEFT JOIN tillage_ranked t ON ds.district = t.district AND t.rn = 1
+LEFT JOIN irrigation_ranked i ON ds.district = i.district AND i.rn = 1
+ORDER BY ds.overall_opportunity_score DESC;

@@ -1,0 +1,6 @@
+sample_id,district,community,latitude,longitude,land_use,soc_percent,clay_percent,sand_percent,ph,sampling_year
+1,Ejura,Agogo,7.123456,-1.234567,Cropland,1.25,25.0,60.0,6.2,2023
+2,Ejura,Agogo,7.134567,-1.245678,Cropland,0.85,30.0,55.0,5.8,2023
+3,Ejura,Nkwanta,7.145678,-1.256789,Fallow,1.8,22.0,65.0,6.5,2023
+4,Ejura,Nkwanta,7.156789,-1.26789,Pasture,2.1,20.0,68.0,6.8,2023
+5,Ejura,Kasei,7.16789,-1.278901,Cropland,0.95,28.0,58.0,5.5,2023
