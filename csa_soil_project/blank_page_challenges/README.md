@@ -32,6 +32,12 @@ blank_page_challenges/
     solutions/
       solution_01_ph.md
       solution_02_clay.md
+  day_82_data_dictionary/
+    challenge_03_sand_dictionary.md
+    challenge_04_ph_dictionary.md
+    challenge_05_clay_dictionary.md
+    solutions/
+      solution_03_sand_dictionary.md
 ```
 
 ## Data licence and attribution
