@@ -36,6 +36,8 @@ blank_page_challenges/
     challenge_03_sand_dictionary.md
     challenge_04_ph_dictionary.md
     challenge_05_clay_dictionary.md
+  day_83_flat_table/
+    challenge_06_join_sand_base.md
     solutions/
       solution_03_sand_dictionary.md
 ```
