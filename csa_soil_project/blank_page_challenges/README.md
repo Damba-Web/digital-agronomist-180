@@ -36,10 +36,17 @@ blank_page_challenges/
     challenge_03_sand_dictionary.md
     challenge_04_ph_dictionary.md
     challenge_05_clay_dictionary.md
+    mistakes_log.md
+    solutions/
   day_83_flat_table/
     challenge_06_join_sand_base.md
+    mistakes_log.md
     solutions/
-      solution_03_sand_dictionary.md
+  day_84_functions/
+    challenge_07_flat_function.md
+    challenge_08_practice_ph_base.md
+    mistakes_log.md
+    solutions/
 ```
 
 ## Data licence and attribution
