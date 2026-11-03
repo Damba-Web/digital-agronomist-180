@@ -63,3 +63,26 @@ def build_flat(base, others, country="Ghana"):
 
     # 7. Return safe DataFrame
     return df
+
+
+def quality_flags(df, oc_high=200):
+    # 1. Guard: Check for required columns
+    required = ["orgc", "ph", "clay", "sand"]
+    for col in required:
+        if col not in df.columns:
+            raise ValueError(f"Missing needed column: {col}")
+
+    # 2. Work on a copy
+    checked = df.copy()
+
+    # 3. Five Hard Flags (Impossible)
+    checked["flag_ph"] = (checked["ph"] < 0) | (checked["ph"] > 14)
+    checked["flag_clay_sand"] = (checked["clay"] + checked["sand"]) > 100
+    checked["flag_clay"] = (checked["clay"] < 0) | (checked["clay"] > 100)
+    checked["flag_sand"] = (checked["sand"] < 0) | (checked["sand"] > 100)
+    checked["flag_oc_neg"] = checked["orgc"] < 0
+
+    # 4. One Soft Flag (Possible but unusual)
+    checked["flag_oc_high"] = checked["orgc"] > oc_high
+
+    return checked
