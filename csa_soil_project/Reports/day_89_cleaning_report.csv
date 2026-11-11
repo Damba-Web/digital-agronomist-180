@@ -1,0 +1,10 @@
+check,result,action
+Total layers,1756,baseline count
+Duplicate rows,0,none needed
+Duplicate layer_id,0,none needed
+Impossible values (hard flags),0,none needed
+Unusual high carbon (soft flag),144,"keep flags, investigate GH-GhaSP scale"
+Datasets that fail the alarm for orgc,GH-GhaSP,check dataset documentation for units
+Missing pH,14,"keep; 0.8% missing, usable only for the rest"
+Missing clay,1257,"keep; 71.6% missing, usable only for the rest (none from GH-GhaSP)"
+Missing sand,1256,"keep; 71.5% missing, usable only for the rest (none from GH-GhaSP)"
