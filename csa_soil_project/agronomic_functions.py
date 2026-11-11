@@ -86,3 +86,27 @@ def quality_flags(df, oc_high=200):
     checked["flag_oc_high"] = checked["orgc"] > oc_high
 
     return checked
+
+
+def dataset_alarm(df, column, group='dataset_id', ratio=5):
+    # Guards
+    if column not in df.columns:
+        raise ValueError(f"Column {column} not found in table.")
+    if group not in df.columns:
+        raise ValueError(f"Group {group} not found in table.")
+
+    # Move 1: Find the median of each group
+    medians = df.groupby(group)[column].median()
+
+    # Move 2: Find the typical group
+    typical = medians.median()
+
+    # Divide by zero guard
+    if typical == 0:
+        raise ValueError("Typical value is 0. Cannot calculate ratio.")
+
+    # Move 3: Divide each group by the typical group
+    ratios = medians / typical
+
+    # Return the groups that are above the threshold
+    return medians[ratios > ratio]
