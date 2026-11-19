@@ -33,3 +33,8 @@ checks the data quality, and flags impossible values.
 - `db_config.example.py` : copy to `db_config.py` and add your own database details
 
 Data: WoSIS (ISRIC), licensed per row. Raw data is not committed.
+
+## Run all checks
+From the `csa_soil_project` folder: `python run_checks.py`
+It builds the flat table, runs the quality flags, the cleaning report and the dataset alarm,
+and saves `Reports/run_checks_report.csv`. Exit code 0 = success, 1 = a check failed.

@@ -1,0 +1,7 @@
+check,result,action
+Total layers,1756,baseline count
+Duplicate rows,0,none needed
+Duplicate layer_id,0,none needed
+Missing ph,14,keep
+Missing clay,1257,"keep; 72% missing, usable only for the rest"
+Missing sand,1256,"keep; 72% missing, usable only for the rest"
