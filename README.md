@@ -1,4 +1,5 @@
 # Digital Agronomist: 180 Days
+![Organic carbon by dataset](Figures/day_92_orgc_by_dataset.png)
 
 I am an agronomist (MSc, RUDN University) learning Python, SQL and data analysis
 to work on climate-smart agriculture and soil carbon. This repo holds my daily work,
