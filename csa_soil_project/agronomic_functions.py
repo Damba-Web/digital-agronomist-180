@@ -165,54 +165,64 @@ def quality_flags(df, oc_high=200):
     return checked
 
 
-def dataset_alarm(df, column, group='dataset_id', ratio=5):
-    """Find the groups whose typical value is far from the typical group.
-
-    Takes the median of column in each group, finds the typical group (the
-    median of those medians), divides each group by it, and returns the
-    groups whose ratio is above ratio.
-
-    Good for values where "times bigger" means something (carbon, clay %).
-    Weak for pH, which is a log scale.
+def dataset_alarm(df, column, group="dataset_id", ratio=5, min_n=10):
+    """
+    Finds groups whose median is far above the typical median.
+    Groups with fewer than min_n real values are left out before the typical 
+    value is found, preventing tiny sample sizes from creating false alarms.
 
     Args:
-        df: the table.
-        column: column to compare, e.g. "orgc".
-        group: column that names the groups (default "dataset_id").
-        ratio: flag groups more than this many times the typical one (default 5).
+        df: The pandas DataFrame.
+        column: The numerical column to check.
+        group: The column to group by (default is "dataset_id").
+        ratio: The multiplier threshold to trigger a flag (default is 5).
+        min_n: The minimum number of real values a group must have to be 
+               included in the comparison (default is 10).
 
     Returns:
-        A Series (group name -> median) with only the flagged groups.
-        Empty if none. A group with a missing median is never flagged.
+        A pandas Series containing the medians of the flagged groups.
 
     Raises:
-        ValueError: if column or group is missing, or the typical value is
-            0 or missing.
+        ValueError: If the column or group doesn't exist in the table.
+        ValueError: If min_n is less than 1.
+        ValueError: If no group has at least min_n values.
+        ValueError: If the typical value is 0 or missing.
+
+    Note:
+        Good for values where "times bigger" means something (carbon, clay %).
+        Weak for pH, which is a log scale.
 
     Example:
-        dataset_alarm(traced, "orgc")   # flags GH-GhaSP (103.4)
+        dataset_alarm(traced, "orgc")   # flags GH-GhaSP
     """
-    # Guards
+
+# 1. Old guards
     if column not in df.columns:
         raise ValueError(f"Column {column} not found in table.")
     if group not in df.columns:
         raise ValueError(f"Group {group} not found in table.")
 
-    # Move 1: Find the median of each group
+    # 2. NEW guard: min_n must make sense
+    if min_n < 1:
+        raise ValueError("min_n must be at least 1.")
+
+    # 3. The sieve
+    counts = df.groupby(group)[column].count()
+    enough = counts[counts >= min_n].index
     medians = df.groupby(group)[column].median()
+    medians = medians[medians.index.isin(enough)]  # Keep only the big groups
 
-    # Move 2: Find the typical group
-    typical = medians.median()
-
-    # Divide by zero guard
-    if pd.isna(typical) or typical == 0:
+    # 4. NEW guard: nobody passed the sieve
+    if len(medians) == 0:
         raise ValueError(
-            "Typical value is 0 or missing. Cannot calculate ratio.")
+            f"No {group} has at least {min_n} values in {column}.")
 
-    # Move 3: Divide each group by the typical group
+    # 5. The rest stays the same
+    typical = medians.median()
+    if pd.isna(typical) or typical == 0:
+        raise ValueError("Typical value is 0. Cannot calculate ratio.")
+
     ratios = medians / typical
-
-    # Return the groups that are above the threshold
     return medians[ratios > ratio]
 
 
